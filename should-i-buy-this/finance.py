@@ -179,6 +179,35 @@ def growth_curve(
     return points
 
 
+def milestone_values(
+    price: float,
+    is_recurring: bool,
+    annual_rate: float,
+    years: float,
+    frequency: str | None = None,
+    checkpoints: tuple[int, ...] = (1, 5, 10, 20),
+) -> list[tuple[int, float]]:
+    """Future value at a few meaningful checkpoints on the way to the full horizon.
+
+    Returns (year, value) pairs for each checkpoint strictly inside the
+    horizon, always ending with the full horizon itself — so callers get
+    a short "here's how it grows along the way" list rather than just
+    the final number.
+    """
+    years_int = int(years)
+    milestones = sorted({c for c in checkpoints if 0 < c < years_int} | {years_int})
+
+    results: list[tuple[int, float]] = []
+    for year in milestones:
+        if is_recurring:
+            periods_per_year = get_periods_per_year(frequency)
+            value = future_value_annuity(price, annual_rate, year, periods_per_year)
+        else:
+            value = future_value_lump_sum(price, annual_rate, year)
+        results.append((year, value))
+    return results
+
+
 # --- Extension points -------------------------------------------------
 #
 # These are intentionally not implemented yet. They're noted here so the
