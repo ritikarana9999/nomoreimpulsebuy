@@ -8,6 +8,7 @@ from finance import (
     future_value_lump_sum,
     get_periods_per_year,
     growth_curve,
+    milestone_values,
     num_occurrences,
     total_nominal_cost,
 )
@@ -104,3 +105,30 @@ def test_growth_curve_is_monotonically_increasing_for_positive_rate():
     curve = growth_curve(price=10, is_recurring=True, annual_rate=0.07, years=5, frequency="monthly")
     values = [v for _, v in curve]
     assert all(math.isclose(b, a) or b > a for a, b in zip(values, values[1:]))
+
+
+def test_milestone_values_includes_default_checkpoints_and_horizon():
+    milestones = milestone_values(price=100, is_recurring=False, annual_rate=0.07, years=30)
+    years_seen = [year for year, _ in milestones]
+    assert years_seen == [1, 5, 10, 20, 30]
+
+
+def test_milestone_values_excludes_checkpoints_past_horizon():
+    milestones = milestone_values(price=100, is_recurring=False, annual_rate=0.07, years=3)
+    years_seen = [year for year, _ in milestones]
+    assert years_seen == [1, 3]
+
+
+def test_milestone_values_no_duplicate_when_horizon_matches_a_checkpoint():
+    milestones = milestone_values(price=100, is_recurring=False, annual_rate=0.07, years=10)
+    years_seen = [year for year, _ in milestones]
+    assert years_seen == [1, 5, 10]
+    assert len(years_seen) == len(set(years_seen))
+
+
+def test_milestone_values_matches_underlying_formulas():
+    milestones = milestone_values(
+        price=5, is_recurring=True, annual_rate=0.07, years=10, frequency="weekly"
+    )
+    for year, value in milestones:
+        assert value == pytest.approx(future_value_annuity(5, 0.07, year, 52))
