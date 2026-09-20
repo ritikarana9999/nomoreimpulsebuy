@@ -8,7 +8,7 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-from finance import calculate_purchase_impact, growth_curve
+from finance import calculate_purchase_impact, get_periods_per_year, growth_curve, milestone_values
 
 st.set_page_config(page_title="Should I Buy This?", page_icon="🎀", layout="centered")
 
@@ -173,6 +173,21 @@ if submitted or "last_result" in st.session_state:
             f"in {years} years at {annual_rate_pct}% annual return. 🌸"
         )
 
+    milestones = milestone_values(
+        price=price,
+        is_recurring=is_recurring,
+        annual_rate=annual_rate,
+        years=years,
+        frequency=frequency,
+    )
+    if len(milestones) > 1:
+        st.markdown("**📆 Here's how it grows along the way:**")
+        lines = [
+            f"- {'In 1 year' if year == 1 else f'In {year} years'}: **\\${value:,.2f}**"
+            for year, value in milestones
+        ]
+        st.markdown("\n".join(lines))
+
     curve = growth_curve(
         price=price,
         is_recurring=is_recurring,
@@ -190,6 +205,13 @@ if submitted or "last_result" in st.session_state:
             f"☕💕 Fun fact: each \\${price:,.2f} {name.lower()} is secretly a "
             f"**\\${impact.future_value_per_occurrence:,.2f}** {name.lower()}, once you count what it "
             f"could have grown into. No judgment — just math. ✨"
+        )
+        periods_per_year = get_periods_per_year(frequency)
+        plain_savings_1yr = price * periods_per_year
+        st.success(
+            f"🐷 Skip the investing math entirely: just skip this {frequency} {name.lower()} and you'd "
+            f"bank **\\${plain_savings_1yr:,.2f}** in plain savings a year from now — no market risk, "
+            f"guaranteed. 💖"
         )
     else:
         multiplier = impact.future_value / price if price else 0
