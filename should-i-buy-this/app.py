@@ -79,11 +79,17 @@ st.markdown(
         font-size: 2rem;
         font-weight: 800;
         line-height: 1.3;
+        margin: 0.5rem 0 1rem 0;
+    }
+
+    /* Gradient-text trick only applies to the wording, never to emoji —
+       color emoji glyphs don't respect text-fill-color and render as
+       broken/substituted symbols if caught inside a clipped span. */
+    .gradient-text {
         background: linear-gradient(90deg, #ff6fa8, #a78bfa);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin: 0.5rem 0 1rem 0;
     }
 
     .stAlert {
@@ -145,8 +151,9 @@ if submitted or "last_result" in st.session_state:
 
     if is_recurring:
         st.markdown(
-            f'<div class="headline-stat">Your {frequency} {name} habit will cost you '
-            f"\\${impact.future_value:,.0f} by {target_year} 😳💸</div>",
+            f'<div class="headline-stat"><span class="gradient-text">'
+            f"Your {frequency} {name} habit will cost you "
+            f"${impact.future_value:,.0f} by {target_year}</span> 😳💸</div>",
             unsafe_allow_html=True,
         )
         st.write(
@@ -156,8 +163,9 @@ if submitted or "last_result" in st.session_state:
         )
     else:
         st.markdown(
-            f'<div class="headline-stat">That {name} will cost you '
-            f"\\${impact.future_value:,.0f} by {target_year} 😳💸</div>",
+            f'<div class="headline-stat"><span class="gradient-text">'
+            f"That {name} will cost you "
+            f"${impact.future_value:,.0f} by {target_year}</span> 😳💸</div>",
             unsafe_allow_html=True,
         )
         st.write(
