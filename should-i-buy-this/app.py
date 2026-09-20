@@ -59,16 +59,16 @@ if submitted or "last_result" in st.session_state:
     st.divider()
 
     if is_recurring:
-        st.subheader(f"Your {frequency} {name} habit will cost you ${impact.future_value:,.0f} by {target_year} 😳")
+        st.subheader(f"Your {frequency} {name} habit will cost you \\${impact.future_value:,.0f} by {target_year} 😳")
         st.write(
-            f"That's **{impact.occurrences:,} purchases** of ${price:,.2f} each — "
-            f"${impact.today_cost:,.2f} out of pocket today, but "
-            f"**${impact.future_value:,.2f}** if it had grown at {annual_rate_pct}% a year instead."
+            f"That's **{impact.occurrences:,} purchases** of \\${price:,.2f} each — "
+            f"\\${impact.today_cost:,.2f} out of pocket today, but "
+            f"**\\${impact.future_value:,.2f}** if it had grown at {annual_rate_pct}% a year instead."
         )
     else:
-        st.subheader(f"That {name} will cost you ${impact.future_value:,.0f} by {target_year} 😳")
+        st.subheader(f"That {name} will cost you \\${impact.future_value:,.0f} by {target_year} 😳")
         st.write(
-            f"${price:,.2f} today could grow into **${impact.future_value:,.2f}** "
+            f"\\${price:,.2f} today could grow into **\\${impact.future_value:,.2f}** "
             f"in {years} years at {annual_rate_pct}% annual return."
         )
 
@@ -86,14 +86,14 @@ if submitted or "last_result" in st.session_state:
 
     if is_recurring:
         st.info(
-            f"☕ Fun fact: each ${price:,.2f} {name.lower()} is secretly a "
-            f"**${impact.future_value_per_occurrence:,.2f}** {name.lower()}, once you count what it "
+            f"☕ Fun fact: each \\${price:,.2f} {name.lower()} is secretly a "
+            f"**\\${impact.future_value_per_occurrence:,.2f}** {name.lower()}, once you count what it "
             f"could have grown into. No judgment — just math."
         )
     else:
         multiplier = impact.future_value / price if price else 0
         st.info(
-            f"🔮 Fun fact: that ${price:,.2f} is really a **{multiplier:,.1f}x** bet against your future self. "
+            f"🔮 Fun fact: that \\${price:,.2f} is really a **{multiplier:,.1f}x** bet against your future self. "
             f"Could still be worth it — that's your call, not ours."
         )
 
