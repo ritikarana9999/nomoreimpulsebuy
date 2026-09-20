@@ -12,14 +12,20 @@ FREQUENCY_PERIODS_PER_YEAR = {
     "daily": 365,
     "weekly": 52,
     "monthly": 12,
+    "quarterly": 4,
+    "half-yearly": 2,
+    "yearly": 1,
 }
+
+FREQUENCY_OPTIONS = tuple(FREQUENCY_PERIODS_PER_YEAR)
 
 
 def get_periods_per_year(frequency: str) -> int:
     """Return how many times a recurring purchase happens per year.
 
     Args:
-        frequency: One of "daily", "weekly", "monthly".
+        frequency: One of "daily", "weekly", "monthly", "quarterly",
+            "half-yearly", "yearly".
 
     Returns:
         The number of occurrences per year for that frequency.
@@ -206,6 +212,16 @@ def milestone_values(
             value = future_value_lump_sum(price, annual_rate, year)
         results.append((year, value))
     return results
+
+
+def monthly_savings_equivalent(price: float, frequency: str) -> float:
+    """Convert a recurring price at any frequency to a common monthly rate.
+
+    Lets purchases on different cadences (daily vs. yearly, etc.) be
+    compared and summed on the same basis — e.g. for a savings-list
+    total. No investment growth is assumed; this is plain cash math.
+    """
+    return price * get_periods_per_year(frequency) / 12
 
 
 # --- Extension points -------------------------------------------------
