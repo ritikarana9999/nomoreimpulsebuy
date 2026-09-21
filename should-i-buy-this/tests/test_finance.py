@@ -3,12 +3,15 @@ import math
 import pytest
 
 from finance import (
+    FREQUENCY_OPTIONS,
+    FREQUENCY_PERIODS_PER_YEAR,
     calculate_purchase_impact,
     future_value_annuity,
     future_value_lump_sum,
     get_periods_per_year,
     growth_curve,
     milestone_values,
+    monthly_savings_equivalent,
     num_occurrences,
     total_nominal_cost,
 )
@@ -18,11 +21,18 @@ def test_get_periods_per_year_known_values():
     assert get_periods_per_year("daily") == 365
     assert get_periods_per_year("weekly") == 52
     assert get_periods_per_year("monthly") == 12
+    assert get_periods_per_year("quarterly") == 4
+    assert get_periods_per_year("half-yearly") == 2
+    assert get_periods_per_year("yearly") == 1
+
+
+def test_frequency_options_matches_periods_dict():
+    assert set(FREQUENCY_OPTIONS) == set(FREQUENCY_PERIODS_PER_YEAR)
 
 
 def test_get_periods_per_year_invalid():
     with pytest.raises(ValueError):
-        get_periods_per_year("yearly")
+        get_periods_per_year("fortnightly")
 
 
 def test_future_value_lump_sum_basic():
@@ -132,3 +142,12 @@ def test_milestone_values_matches_underlying_formulas():
     )
     for year, value in milestones:
         assert value == pytest.approx(future_value_annuity(5, 0.07, year, 52))
+
+
+def test_monthly_savings_equivalent_across_frequencies():
+    assert monthly_savings_equivalent(1, "daily") == pytest.approx(365 / 12)
+    assert monthly_savings_equivalent(7, "weekly") == pytest.approx(7 * 52 / 12)
+    assert monthly_savings_equivalent(50, "monthly") == pytest.approx(50)
+    assert monthly_savings_equivalent(30, "quarterly") == pytest.approx(10)
+    assert monthly_savings_equivalent(60, "half-yearly") == pytest.approx(10)
+    assert monthly_savings_equivalent(120, "yearly") == pytest.approx(10)
