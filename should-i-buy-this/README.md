@@ -1,25 +1,21 @@
 # Should I Buy This? 💸
 
-A small, playful calculator that shows the opportunity cost of a purchase —
-what that money could be worth years from now if invested instead.
+A small, playful calculator that shows what skipping a purchase actually
+saves you — broken down by week, month, and year.
 
-Not a guilt trip. Just math, with a chart.
+Not a guilt trip. Not an investing lecture. Just plain, straightforward math.
 
 ## What it does
 
 - Pick a purchase (name + price), mark it one-time or recurring
-  (daily/weekly/monthly/quarterly/half-yearly/yearly), set an assumed
-  annual investment return and a time horizon.
-- One-time purchases use simple compound growth: `FV = price * (1 + rate)^years`.
-- Recurring purchases use the future value of a periodic annuity, so a
-  $5 coffee habit compounds like a series of small investments rather
-  than a single lump sum.
-- Shows a headline number, a milestone list (1/5/10/20 years and beyond),
-  a growth-curve chart, and a lighter secondary stat (e.g. what each
-  coffee is "really" costing you) — plus, for recurring purchases, a
-  plain no-investing savings figure for the next year.
+  (daily/weekly/monthly/quarterly/half-yearly/yearly).
+- For recurring purchases, shows what skipping it saves **per week, per
+  month, and per year** — simple multiplication, no investment growth or
+  return-rate assumptions anywhere.
+- For one-time purchases, shows the plain amount you'd keep.
 - **My Savings List:** an editable table where you can add every product
-  you're skipping, at any frequency, and see the combined monthly total.
+  you're skipping, at any frequency, and see the combined monthly (and
+  yearly) total.
 
 ## Project structure
 
@@ -57,10 +53,7 @@ pytest
 
 The code leaves room for a few features without needing a rewrite:
 
-- **Happiness score (1–10):** a slider that would soften the copy/framing
-  of the output instead of purely scolding the user.
+- **Happiness score (1–10):** could soften the copy/framing of the output
+  instead of purely scolding the user.
 - **Calculation history:** logging each run to a local file or SQLite DB
   for later analysis, kept separate from the pure math in `finance.py`.
-- **Custom portfolio rate:** a toggle to swap the flat assumed rate for a
-  user-entered personal return — the math already just takes a plain
-  `annual_rate` float, so this is a UI-only change when it's built.
