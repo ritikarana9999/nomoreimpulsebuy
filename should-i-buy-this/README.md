@@ -8,14 +8,18 @@ Not a guilt trip. Just math, with a chart.
 ## What it does
 
 - Pick a purchase (name + price), mark it one-time or recurring
-  (daily/weekly/monthly), set an assumed annual investment return and a
-  time horizon.
+  (daily/weekly/monthly/quarterly/half-yearly/yearly), set an assumed
+  annual investment return and a time horizon.
 - One-time purchases use simple compound growth: `FV = price * (1 + rate)^years`.
 - Recurring purchases use the future value of a periodic annuity, so a
   $5 coffee habit compounds like a series of small investments rather
   than a single lump sum.
-- Shows a headline number, a growth-curve chart, and a lighter secondary
-  stat (e.g. what each coffee is "really" costing you).
+- Shows a headline number, a milestone list (1/5/10/20 years and beyond),
+  a growth-curve chart, and a lighter secondary stat (e.g. what each
+  coffee is "really" costing you) — plus, for recurring purchases, a
+  plain no-investing savings figure for the next year.
+- **My Savings List:** an editable table where you can add every product
+  you're skipping, at any frequency, and see the combined monthly total.
 
 ## Project structure
 
