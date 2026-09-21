@@ -8,7 +8,14 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-from finance import calculate_purchase_impact, get_periods_per_year, growth_curve, milestone_values
+from finance import (
+    FREQUENCY_OPTIONS,
+    calculate_purchase_impact,
+    get_periods_per_year,
+    growth_curve,
+    milestone_values,
+    monthly_savings_equivalent,
+)
 
 st.set_page_config(page_title="Should I Buy This?", page_icon="🎀", layout="centered")
 
@@ -117,7 +124,7 @@ with st.form("purchase_form"):
 
     frequency = None
     if is_recurring_choice:
-        frequency = st.selectbox("📅 How often?", ["daily", "weekly", "monthly"], index=1)
+        frequency = st.selectbox("📅 How often?", FREQUENCY_OPTIONS, index=1)
 
     annual_rate_pct = st.slider(
         "📈 Assumed annual investment return, if you invested instead",
@@ -229,6 +236,65 @@ if submitted or "last_result" in st.session_state:
 
     if submitted:
         st.balloons()
+
+st.divider()
+st.markdown('<div class="sticker-row">📝 💌 🛍️ ✨</div>', unsafe_allow_html=True)
+st.subheader("My Savings List 💌")
+st.caption("Add every little splurge you're skipping this month and watch the total add up. ✨")
+
+if "savings_list" not in st.session_state:
+    st.session_state.savings_list = pd.DataFrame(
+        {
+            "Product": pd.Series(dtype="str"),
+            "Price ($)": pd.Series(dtype="float"),
+            "Frequency": pd.Series(dtype="str"),
+        }
+    )
+
+edited_savings_list = st.data_editor(
+    st.session_state.savings_list,
+    num_rows="dynamic",
+    use_container_width=True,
+    hide_index=True,
+    key="savings_list_editor",
+    column_config={
+        "Product": st.column_config.TextColumn("🛍️ Product", required=True),
+        "Price ($)": st.column_config.NumberColumn(
+            "💸 Price ($)", min_value=0.01, step=0.5, format="%.2f", required=True
+        ),
+        "Frequency": st.column_config.SelectboxColumn(
+            "🔁 Frequency", options=list(FREQUENCY_OPTIONS), required=True
+        ),
+    },
+)
+st.session_state.savings_list = edited_savings_list
+
+complete_rows = edited_savings_list.dropna(subset=["Product", "Price ($)", "Frequency"])
+complete_rows = complete_rows[complete_rows["Product"].astype(str).str.strip() != ""]
+
+if not complete_rows.empty:
+    complete_rows = complete_rows.copy()
+    complete_rows["Monthly savings"] = complete_rows.apply(
+        lambda row: monthly_savings_equivalent(row["Price ($)"], row["Frequency"]), axis=1
+    )
+    total_monthly = complete_rows["Monthly savings"].sum()
+
+    st.markdown(
+        f'<div class="headline-stat"><span class="gradient-text">'
+        f"Skip it all and save ${total_monthly:,.2f}</span> every month 💰✨</div>",
+        unsafe_allow_html=True,
+    )
+    st.dataframe(
+        complete_rows[["Product", "Price ($)", "Frequency", "Monthly savings"]],
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Price ($)": st.column_config.NumberColumn("💸 Price ($)", format="$%.2f"),
+            "Monthly savings": st.column_config.NumberColumn("💰 Monthly savings", format="$%.2f"),
+        },
+    )
+else:
+    st.caption("Add a product above (double-click a cell to start) to see your monthly total. 🌸")
 
 # --- Extension points ---------------------------------------------------
 #
