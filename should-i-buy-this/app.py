@@ -3,19 +3,10 @@
 All the math lives in finance.py; this file is just inputs, layout, and copy.
 """
 
-from datetime import date
-
 import pandas as pd
 import streamlit as st
 
-from finance import (
-    FREQUENCY_OPTIONS,
-    calculate_purchase_impact,
-    get_periods_per_year,
-    growth_curve,
-    milestone_values,
-    monthly_savings_equivalent,
-)
+from finance import FREQUENCY_OPTIONS, monthly_savings_equivalent, savings_breakdown
 
 st.set_page_config(page_title="Should I Buy This?", page_icon="🎀", layout="centered")
 
@@ -103,6 +94,19 @@ st.markdown(
         border-radius: 20px !important;
         border: none !important;
     }
+
+    [data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 16px;
+        padding: 0.75rem 0.5rem;
+        text-align: center;
+    }
+    [data-testid="stMetricLabel"] {
+        justify-content: center;
+    }
+    [data-testid="stMetricValue"] {
+        color: #ff6fa8;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -110,7 +114,7 @@ st.markdown(
 
 st.markdown('<div class="sticker-row">✨ 🎀 💕 🌸 💅 ✨</div>', unsafe_allow_html=True)
 st.title("Should I Buy This? 🎀")
-st.caption("A cute little calculator for your treat-yourself moments 💕 — zero guilt, all sparkle.")
+st.caption("A cute little calculator for your treat-yourself moments 💕 — skip it, keep the cash.")
 
 with st.form("purchase_form"):
     col1, col2 = st.columns([2, 1])
@@ -126,110 +130,51 @@ with st.form("purchase_form"):
     if is_recurring_choice:
         frequency = st.selectbox("📅 How often?", FREQUENCY_OPTIONS, index=1)
 
-    annual_rate_pct = st.slider(
-        "📈 Assumed annual investment return, if you invested instead",
-        min_value=2,
-        max_value=12,
-        value=7,
-        step=1,
-        format="%d%%",
-    )
-
-    years = st.slider("⏳ Time horizon (years)", min_value=1, max_value=50, value=30, step=1)
-
     submitted = st.form_submit_button("✨ Crunch the Numbers ✨", use_container_width=True)
 
 if submitted or "last_result" in st.session_state:
     is_recurring = frequency_choice.startswith("Recurring")
-    annual_rate = annual_rate_pct / 100
-
-    impact = calculate_purchase_impact(
-        price=price,
-        is_recurring=is_recurring,
-        annual_rate=annual_rate,
-        years=years,
-        frequency=frequency,
-    )
-
-    target_year = date.today().year + years
     name = purchase_name.strip() or "this"
 
     st.divider()
 
     if is_recurring:
+        breakdown = savings_breakdown(price=price, frequency=frequency)
+
         st.markdown(
             f'<div class="headline-stat"><span class="gradient-text">'
-            f"Your {frequency} {name} habit will cost you "
-            f"${impact.future_value:,.0f} by {target_year}</span> 😳💸</div>",
+            f"Skip your {frequency} {name} and save"
+            f"</span> 💰✨</div>",
             unsafe_allow_html=True,
         )
-        st.write(
-            f"That's **{impact.occurrences:,} purchases** of \\${price:,.2f} each — "
-            f"\\${impact.today_cost:,.2f} out of pocket today, but "
-            f"**\\${impact.future_value:,.2f}** if it had grown at {annual_rate_pct}% a year instead. 🌸"
+
+        week_col, month_col, year_col = st.columns(3)
+        with week_col:
+            st.metric("📅 Per week", f"${breakdown['weekly']:,.2f}")
+        with month_col:
+            st.metric("🗓️ Per month", f"${breakdown['monthly']:,.2f}")
+        with year_col:
+            st.metric("🎉 Per year", f"${breakdown['yearly']:,.2f}")
+
+        st.caption(
+            f"That's **{breakdown['occurrences_per_year']:,} {name.lower()}s a year** at "
+            f"\\${price:,.2f} each — no investing, no market risk, just cash back in your pocket. 🌸"
         )
     else:
         st.markdown(
             f'<div class="headline-stat"><span class="gradient-text">'
-            f"That {name} will cost you "
-            f"${impact.future_value:,.0f} by {target_year}</span> 😳💸</div>",
+            f"Skip that {name} and keep ${price:,.2f}"
+            f"</span> 💰✨</div>",
             unsafe_allow_html=True,
         )
-        st.write(
-            f"\\${price:,.2f} today could grow into **\\${impact.future_value:,.2f}** "
-            f"in {years} years at {annual_rate_pct}% annual return. 🌸"
-        )
-
-    milestones = milestone_values(
-        price=price,
-        is_recurring=is_recurring,
-        annual_rate=annual_rate,
-        years=years,
-        frequency=frequency,
-    )
-    if len(milestones) > 1:
-        st.markdown("**📆 Here's how it grows along the way:**")
-        lines = [
-            f"- {'In 1 year' if year == 1 else f'In {year} years'}: **\\${value:,.2f}**"
-            for year, value in milestones
-        ]
-        st.markdown("\n".join(lines))
-
-    curve = growth_curve(
-        price=price,
-        is_recurring=is_recurring,
-        annual_rate=annual_rate,
-        years=years,
-        frequency=frequency,
-    )
-    chart_df = pd.DataFrame(curve, columns=["Year", "Future value ($)"]).set_index("Year")
-    st.line_chart(chart_df)
-
-    st.divider()
-
-    if is_recurring:
-        st.info(
-            f"☕💕 Fun fact: each \\${price:,.2f} {name.lower()} is secretly a "
-            f"**\\${impact.future_value_per_occurrence:,.2f}** {name.lower()}, once you count what it "
-            f"could have grown into. No judgment — just math. ✨"
-        )
-        periods_per_year = get_periods_per_year(frequency)
-        plain_savings_1yr = price * periods_per_year
-        st.success(
-            f"🐷 Skip the investing math entirely: just skip this {frequency} {name.lower()} and you'd "
-            f"bank **\\${plain_savings_1yr:,.2f}** in plain savings a year from now — no market risk, "
-            f"guaranteed. 💖"
-        )
-    else:
-        multiplier = impact.future_value / price if price else 0
-        st.info(
-            f"🔮💅 Fun fact: that \\${price:,.2f} is really a **{multiplier:,.1f}x** bet against your future self. "
-            f"Could still be worth it — that's your call, not ours. ✨"
+        st.caption(
+            "One-time purchases don't have a weekly/monthly rhythm — but hey, that's "
+            f"\\${price:,.2f} staying right in your pocket. 🌸"
         )
 
     st.caption(
-        "This is a simple projection, not financial advice — real returns go up and down, "
-        "and life is for living too. Buy the latte if the latte is good. 🌸💕"
+        "Simple and straightforward: this is just what skipping it puts back in your "
+        "pocket — no assumptions, no guilt trip. 💕"
     )
 
     st.session_state["last_result"] = True
@@ -284,6 +229,7 @@ if not complete_rows.empty:
         f"Skip it all and save ${total_monthly:,.2f}</span> every month 💰✨</div>",
         unsafe_allow_html=True,
     )
+    st.caption(f"That's **\\${total_monthly * 12:,.2f} a year**, just by skipping what's on this list. 🎉")
     st.dataframe(
         complete_rows[["Product", "Price ($)", "Frequency", "Monthly savings"]],
         use_container_width=True,
@@ -302,11 +248,6 @@ else:
 #   copy above (e.g. "you clearly love this — enjoy it") without changing
 #   the underlying math in finance.py.
 #
-# - Calculation history: each `impact` computed above could be handed to
-#   a small storage helper (local file or SQLite) to log runs for later
-#   analysis, without finance.py needing to know about storage at all.
-#
-# - Custom portfolio rate: `annual_rate` above is a plain float, so a
-#   toggle to swap the slider for a user-entered personal return rate
-#   just needs to set that same variable before calculate_purchase_impact
-#   is called.
+# - Calculation history: each `breakdown` computed above could be handed
+#   to a small storage helper (local file or SQLite) to log runs for
+#   later analysis, without finance.py needing to know about storage.
